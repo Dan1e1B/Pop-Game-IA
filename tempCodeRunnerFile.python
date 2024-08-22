@@ -1,0 +1,80 @@
+import random
+from FeedFowardNeuralNetwork import *
+from GenericAlgorithm import *
+from GenericAlgorithm import Individual
+from PopGame import*
+
+
+class NeuralNetworkGenericAlgorithm(GenericAlgorithm):
+    def __init__(self, generations: int, population: int, parents: int, k_tournment: int, newIndividuals: int, eliteIndividuals: int, mutation_chance: float, mutation_index: float):
+        super().__init__(generations, population, NeuralNetwork.gerateNN(), parents, newIndividuals, eliteIndividuals)
+        self.k_tournment = k_tournment
+        self.mutation_chance = mutation_chance
+        self.mutation_index = mutation_index
+
+    def generateIndividuals(self) -> list[Individual]:
+        return [NeuralNetwork(3, 20, 1, activation_func=tanh, output_func=tanh) for i in range(super().population)]
+    
+    def selectParents(self) -> list[NeuralNetwork]:
+        individuals = [super().randomIndividual() for i in range(self.k_tournment)]
+        individuals = individuals.sort(key= lambda nn: nn.getFitness(), reverse=True)
+
+        return individuals[0]
+
+    def crossover(self, individuals: list[NeuralNetwork]) -> Individual:
+
+        neuralNetworks = [nn.getNeuralNetwork() for nn in individuals]
+        size = len(neuralNetworks[0])
+
+        child = [neuralNetworks[randomInteger(max=len(individuals))][i] for i in range(size)]
+        sizes = individuals[0].getNNSizes()
+        newNN = NeuralNetwork(sizes[0], sizes[1], sizes[2], child)
+
+        return newNN
+    
+    def mutation(self, individual: NeuralNetwork) -> Individual:
+        
+        if (random.random > self.mutation_chance): return Individual
+        neuralNetwork = individual.getNeuralNetwork()
+
+        for i in range(len(neuralNetwork) * self.mutation_index):
+            neuralNetwork[randomInteger(max=len(neuralNetwork))] = randomNumber()
+        
+        sizes = individual.getNNSizes()
+        newNN = NeuralNetwork(sizes[0], sizes[1], sizes[2], neuralNetwork)
+
+        return newNN
+    
+    
+
+    def setPopulationFitness(self):
+        for i in range(len(self.population)):
+            for j in range(i + 1, len(self.population)):
+
+                nn1, nn2 = self.population[i], self.population[j]
+
+                g1 = Game(nn1, nn2)
+                g2 = Game(nn2, nn1)
+
+                score1 = g1.runGame()
+                score2 = g2.runGame()
+                
+                # Number of points per game
+                nn1.addToFitness(score1[0][0] + score2[0][1]) 
+                nn2.addToFitness(score1[0][1] + score2[0][0])
+
+                # Number of hits per game
+                nn1.addToFitness(score1[1][0] / 20 + score2[1][1] / 20)
+                nn2.addToFitness(score1[1][1] / 20 + score2[1][0] / 20)
+                
+
+
+
+
+    
+
+        
+
+if __name__ == "__main__":
+    NeuralNetworkGenericAlgorithm(100, 20, 3, 3, 10, 10, 0.2, 0.1)
+
