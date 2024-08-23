@@ -7,12 +7,12 @@ from PopGame import*
 
 
 class NeuralNetworkGenericAlgorithm(GenericAlgorithm):
-    def __init__(self, generations: int, population: int, parents: int, k_tournment: int, eliteIndividuals: int, mutation_chance: float, mutation_index: float):
+    def __init__(self, generations: int, population: int, parents: int, k_tournment: int, eliteIndividualsChance: int, mutation_chance: float, mutation_index: float):
 
         self.k_tournment = k_tournment
         self.mutation_chance = mutation_chance
         self.mutation_index = mutation_index
-        super().__init__(generations, population, NeuralNetwork.gerateNN, parents, eliteIndividuals)
+        super().__init__(generations, population, NeuralNetwork.gerateNN, parents, eliteIndividualsChance)
 
     def generateIndividuals(self) -> list[Individual]:
         return [NeuralNetwork(3, 20, 1, activation_func=tanh, output_func=tanh) for i in range(super().population)]
@@ -21,7 +21,7 @@ class NeuralNetworkGenericAlgorithm(GenericAlgorithm):
 
         individuals: list[Individual] = []
 
-        for i in range(self.k_tournment):
+        for _ in range(self.k_tournment):
             individuals.append(super().randomIndividual())
 
         return individuals
@@ -42,11 +42,9 @@ class NeuralNetworkGenericAlgorithm(GenericAlgorithm):
         if (random.random() > self.mutation_chance): return individual
         neuralNetwork = individual.getNeuralNetwork()
 
-        for i in range(int(len(neuralNetwork) * self.mutation_index)):
+        for _ in range(int(len(neuralNetwork) * self.mutation_index)):
             index = randomInteger(max=len(neuralNetwork))
-
-            if type(neuralNetwork[index]) == list: neuralNetwork[index] = [randomNumber(NeuralNetwork.MINVALUE, NeuralNetwork.MAXVALUE) for i in range(len(neuralNetwork[index]))]
-            else: neuralNetwork[index] = randomNumber(NeuralNetwork.MINVALUE, NeuralNetwork.MAXVALUE)
+            neuralNetwork[index] = randomFloat(NeuralNetwork.MINVALUE, NeuralNetwork.MAXVALUE)
 
         
         sizes = individual.getNNSizes()
@@ -74,5 +72,5 @@ class NeuralNetworkGenericAlgorithm(GenericAlgorithm):
         
 
 if __name__ == "__main__":
-    NeuralNetworkGenericAlgorithm(100, 50, 3, 3, 10, 0.2, 0.1)
+    NeuralNetworkGenericAlgorithm(generations=100, population=50, parents=3, k_tournment=3, eliteIndividualsChance=0.1, mutation_chance=0.1, mutation_index=0.1)
 

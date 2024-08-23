@@ -22,24 +22,24 @@ class GenericAlgorithm(ABC):
 
     OUTPUT_FILE = "Generic Algorithm Result.txt"
 
-    def __init__(self, generations: int, populationSize: int, populationInit, parents: int, eliteIndividuals: int, outputFile: str = OUTPUT_FILE):
+    def __init__(self, generations: int, populationSize: int, populationInit, parents: int, eliteIndividualsChance: int, outputFile: str = OUTPUT_FILE):
         
         print(f"""Generations: {generations}
 Population Size: {populationSize}
 Parents: {parents}
-Elite Individuals: {eliteIndividuals}
+Elite Individuals: {eliteIndividualsChance}
 Output File: {outputFile}\n""")
 
         self.generations = generations
         self.populationSize = populationSize
         self.parents = parents
-        self.eliteIndividuals = eliteIndividuals
+        self.eliteIndividualsChance = eliteIndividualsChance
         self.outputFile = outputFile
 
         self.curGeneration = 0
         
         self.population: list[Individual] = [populationInit() for _ in range(populationSize)]
-        self.writeOutput(outputFile, self.population[0])
+        # self.writeOutput(outputFile, self.population[0])
         self.setPopulationFitness()
         self.population.sort(key= lambda i: i.getFitness(), reverse=True)
 
@@ -87,9 +87,9 @@ Output File: {outputFile}\n""")
             self.population.sort(key= lambda i: i.getFitness(), reverse=True)
             print(f"""GENERATION #{self.curGeneration} Best Fitness: {self.population[0].getFitness()} AVG Fitness: {sum([i.getFitness() for i in self.population]) / self.populationSize}""")
             
-            
-            newPopulation = self.population[:self.eliteIndividuals] 
-            newPopulation += [self.generateNewIndividual() for _ in range(self.populationSize - self.eliteIndividuals)]
+            eliteIndividuals = int(self.eliteIndividualsChance * self.populationSize)
+            newPopulation = self.population[:eliteIndividuals] 
+            newPopulation += [self.generateNewIndividual() for _ in range(self.populationSize - eliteIndividuals)]
 
             self.population = newPopulation.copy()
             self.setPopulationFitness()

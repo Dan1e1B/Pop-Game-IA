@@ -3,7 +3,7 @@ import math
 from GenericAlgorithm import *
 import numpy as np
 
-def randomNumber(min=0, max=1):
+def randomFloat(min=0, max=1):
     return min + (max - min) * random.random()
 
 def randomInteger(min=0, max=2) -> int:
@@ -20,7 +20,7 @@ def tanh(n):
     return math.tanh(n)
 
 def softmax(arr):
-    print(arr)
+
     #d = sum([round(math.e ** i, 5) for i in arr])
     s = 0
     for i in arr:
@@ -37,8 +37,6 @@ class NeuralNetwork(Individual):
     MINBIAS, MAXBIAS = MINVALUE, MAXVALUE
 
     def __init__(self, num_inputs, num_hidden, num_output, values=[], activation_func=tanh, output_func=tanh):
-
-        # print(num_inputs, num_hidden, num_output)
         
         self.num_inputs = num_inputs
         self.num_hidden = num_hidden
@@ -49,42 +47,49 @@ class NeuralNetwork(Individual):
 
         if values == []:
             
-            self.weights_hidden_layer = [[randomNumber(self.MINWEIGHT, self.MAXWEIGHT) for j in range(num_inputs)] for i in range(num_hidden)]
-            self.weights_output_layer = [[randomNumber(self.MINWEIGHT, self.MAXWEIGHT) for j in range(num_hidden)] for i in range(num_output)]
+            self.weights_hidden_layer = [randomFloat(self.MINWEIGHT, self.MAXWEIGHT) for _ in range(num_inputs * num_hidden)]
+            self.weights_output_layer = [randomFloat(self.MINWEIGHT, self.MAXWEIGHT) for _ in range(num_hidden * num_output)]
 
-            self.bias_hidden_layer = [randomNumber(self.MINBIAS, self.MAXBIAS) for i in range(num_hidden)]
-            self.bias_output_layer = [randomNumber(self.MINBIAS, self.MAXBIAS) for i in range(num_output)]
+            self.bias_hidden_layer = [randomFloat(self.MINBIAS, self.MAXBIAS) for _ in range(num_hidden)]
+            self.bias_output_layer = [randomFloat(self.MINBIAS, self.MAXBIAS) for _ in range(num_output)]
         
         else:
-            
 
-            self.weights_hidden_layer = [[values[j][i] for i in range(num_inputs)] for j in range(num_hidden)]
-            n = num_hidden
+            self.weights_hidden_layer = values[: num_inputs * num_hidden]
+            n = num_inputs * num_hidden
 
-            self.bias_hidden_layer = values[n: n + num_hidden]
+            self.bias_hidden_layer = values[ n: n + num_hidden ]
             n += num_hidden
 
-            self.weights_output_layer = [[values[j+n][i] for i in range(num_hidden)] for j in range(num_output)]
-            n += num_output
+            self.weights_output_layer = values[ n : n + num_hidden * num_output ]
+            n += num_hidden * num_output
 
-            self.bias_output_layer = values[n: n+num_output]
+            self.bias_output_layer = values[ n : n + num_output ]
+
+#         print(f"""Weights hidden layer: {self.weights_hidden_layer}
+# Bias hidden layer: {self.bias_hidden_layer}
+# Weights output layer: {self.weights_output_layer}
+# Bias output layer: {self.bias_output_layer}""")
+
             
     def output(self, inputValues):
 
-        hiddenLayer = [self.bias_hidden_layer[i] for i in range(self.num_hidden)]
-        outputLayer = [self.bias_output_layer[i] for i in range(self.num_output)]
+        hiddenLayer = self.bias_hidden_layer.copy()
+        outputLayer = self.bias_output_layer.copy()
+
+        #print(f"HiddenLayer: {hiddenLayer}\nOutputLayer: {outputLayer}")
 
         for i in range(self.num_hidden):
             for j in range(self.num_inputs):
 
-                hiddenLayer[i] += inputValues[j] * self.weights_hidden_layer[i][j]
+                hiddenLayer[i] += inputValues[j] * self.weights_hidden_layer[ i * self.num_inputs + j ]
 
             hiddenLayer[i] = self.activation_func(hiddenLayer[i])
 
         for i in range(self.num_output):
             for j in range(self.num_hidden):
 
-                outputLayer[i] += hiddenLayer[j] * self.weights_output_layer[i][j]
+                outputLayer[i] += hiddenLayer[j] * self.weights_output_layer[ i * self.num_hidden + j ]
 
             if self.output_func != softmax: outputLayer[i] = self.output_func(outputLayer[i])
         
@@ -111,10 +116,13 @@ class NeuralNetwork(Individual):
     
     @classmethod
     def getNNFromFile(cls, num_input: int, num_hidden: int, num_output: int, fileName: str ="Generic Algorithm Result.txt"):
-        
+
         file = open(fileName, "r")
-        values = list(file.read())
-        print(values)
+        values = file.read()[2:-2]
+        values = values.split(",")
+        
+        values = [float(value) for value in values]
+        #print(values)
         return NeuralNetwork(num_input, num_hidden, num_output, values)
     
     def __str__(self) -> str:
